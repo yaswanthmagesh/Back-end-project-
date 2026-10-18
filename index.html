@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Event Registration API</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --border: #475569;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --success: #22c55e;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      --radius: 12px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    header p { color: var(--text-muted); font-size: 0.95rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+    }
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge.post { background: rgba(59,130,246,0.2); color: var(--primary); }
+    .badge.get { background: rgba(34,197,94,0.2); color: var(--success); }
+    form { display: flex; flex-direction: column; gap: 14px; }
+    label { font-size: 0.85rem; font-weight: 500; color: var(--text-muted); }
+    input {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.9rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input:focus { outline: none; border-color: var(--primary); }
+    input::placeholder { color: var(--text-muted); }
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 18px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-family: inherit;
+    }
+    button:hover { background: var(--primary-hover); }
+    button:active { transform: scale(0.98); }
+    button.secondary {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+    }
+    button.secondary:hover { background: var(--border); }
+    .stats { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat {
+      flex: 1;
+      min-width: 100px;
+      background: var(--surface-2);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat .num { font-size: 1.5rem; font-weight: 700; }
+    .stat .label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+    .response {
+      background: #0b1120;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'SF Mono', 'Fira Code', Consolas, monospace;
+      font-size: 0.8rem;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      margin-top: 16px;
+    }
+    .response.empty { color: var(--text-muted); font-style: italic; }
+    .status { font-weight: 700; margin-bottom: 8px; }
+    .status.ok { color: var(--success); }
+    .status.err { color: var(--error); }
+    .table-wrap { overflow-x: auto; margin-top: 16px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th { text-align: left; padding: 8px 10px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    td { padding: 8px 10px; border-bottom: 1px solid rgba(71,85,105,0.3); white-space: nowrap; }
+    tr:hover td { background: rgba(59,130,246,0.05); }
+    .empty-row { text-align: center; color: var(--text-muted); padding: 24px; }
+    .lookup-row { display: flex; gap: 10px; }
+    .lookup-row input { flex: 1; }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+    .toast.success { background: var(--success); color: white; }
+    .toast.error { background: var(--error); color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Event Registration API</h1>
+      <p>Test the backend endpoints below — register students and view registrations.</p>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h2><span class="badge post">POST</span> /register</h2>
+        <form id="registerForm">
+          <div>
+            <label for="name">Name *</label>
+            <input type="text" id="name" placeholder="Jane Doe" required />
+          </div>
+          <div>
+            <label for="email">Email *</label>
+            <input type="email" id="email" placeholder="jane@college.edu" required />
+          </div>
+          <div>
+            <label for="dept">College / Department *</label>
+            <input type="text" id="dept" placeholder="Computer Science" required />
+          </div>
+          <button type="submit">Register Student</button>
+        </form>
+        <div class="response empty" id="registerResponse">Response will appear here…</div>
+      </div>
+
+      <div class="card">
+        <h2><span class="badge get">GET</span> /registrations/:id</h2>
+        <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:14px">Look up a single registration by ID or email.</p>
+        <div class="lookup-row">
+          <input type="text" id="lookupId" placeholder="UUID or email address" />
+          <button id="lookupBtn" class="secondary">Look Up</button>
+        </div>
+        <div class="response empty" id="lookupResponse">Response will appear here…</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="badge get">GET</span> /registrations</h2>
+      <div class="stats">
+        <div class="stat"><div class="num" id="statRegistered">—</div><div class="label">Registered</div></div>
+        <div class="stat"><div class="num" id="statRemaining">—</div><div class="label">Seats Remaining</div></div>
+        <div class="stat"><div class="num" id="statCapacity">50</div><div class="label">Capacity</div></div>
+      </div>
+      <button id="refreshBtn" class="secondary" style="margin-bottom:16px">Refresh List</button>
+      <div class="table-wrap">
+        <table id="regTable">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>College / Dept</th><th>Registered At</th><th>ID</th></tr>
+          </thead>
+          <tbody id="regBody">
+            <tr class="empty-row"><td colspan="5">No registrations yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    function showResponse(el, status, body) {
+      const statusEl = document.createElement('div');
+      statusEl.className = 'status ' + (status >= 200 && status < 300 ? 'ok' : 'err');
+      statusEl.textContent = 'HTTP ' + status;
+      el.innerHTML = '';
+      el.appendChild(statusEl);
+      const pre = document.createElement('div');
+      pre.textContent = JSON.stringify(body, null, 2);
+      el.appendChild(pre);
+      el.classList.remove('empty');
+    }
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show ' + type;
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const dept = document.getElementById('dept').value.trim();
+      const el = document.getElementById('registerResponse');
+      el.classList.add('empty');
+      el.textContent = 'Sending…';
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, college_department: dept }),
+        });
+        const data = await res.json();
+        showResponse(el, res.status, data);
+        if (res.ok) {
+          showToast('Registration successful!', 'success');
+          document.getElementById('registerForm').reset();
+          loadRegistrations();
+        } else {
+          showToast(data.error || 'Registration failed', 'error');
+        }
+      } catch (err) {
+        showResponse(el, 0, { error: 'Network error: ' + err.message });
+        showToast('Network error', 'error');
+      }
+    });
+
+    async function loadRegistrations() {
+      try {
+        const res = await fetch('/registrations');
+        const data = await res.json();
+        document.getElementById('statRegistered').textContent = data.registered ?? 0;
+        document.getElementById('statRemaining').textContent = data.seats_remaining ?? 50;
+        const body = document.getElementById('regBody');
+        if (!data.registrations || data.registrations.length === 0) {
+          body.innerHTML = '<tr class="empty-row"><td colspan="5">No registrations yet.</td></tr>';
+          return;
+        }
+        body.innerHTML = data.registrations.map(r => {
+          const date = new Date(r.registered_at).toLocaleString();
+          return `<tr>
+            <td>${escapeHtml(r.name)}</td>
+            <td>${escapeHtml(r.email)}</td>
+            <td>${escapeHtml(r.college_department || '—')}</td>
+            <td>${date}</td>
+            <td style="font-family:monospace;font-size:0.72rem;color:var(--text-muted)">${r.id}</td>
+          </tr>`;
+        }).join('');
+      } catch (err) {
+        showToast('Failed to load registrations', 'error');
+      }
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    document.getElementById('refreshBtn').addEventListener('click', loadRegistrations);
+
+    document.getElementById('lookupBtn').addEventListener('click', async () => {
+      const id = document.getElementById('lookupId').value.trim();
+      if (!id) { showToast('Enter an ID or email', 'error'); return; }
+      const el = document.getElementById('lookupResponse');
+      el.classList.add('empty');
+      el.textContent = 'Searching…';
+      try {
+        const res = await fetch('/registrations/' + encodeURIComponent(id));
+        const data = await res.json();
+        showResponse(el, res.status, data);
+        if (!res.ok) showToast(data.error || 'Not found', 'error');
+      } catch (err) {
+        showResponse(el, 0, { error: 'Network error: ' + err.message });
+      }
+    });
+
+    document.getElementById('lookupId').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('lookupBtn').click();
+    });
+
+    loadRegistrations();
+  </script>
+</body>
+</html>
